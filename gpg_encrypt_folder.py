@@ -4,6 +4,22 @@ import shutil
 import sys
 import zipfile
 
+def ask_delete(file_path):
+    """Ask user whether to delete a file after operation."""
+    choice = input(f"❓ Do you want to delete the original file '{file_path}'? (Y/y for Yes, N/n for No, default is No): ").strip()
+    if choice.lower() == "y":
+        try:
+            if os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+            else:
+                os.remove(file_path)
+            print(f"🗑️ Deleted: {file_path}")
+        except Exception as e:
+            print(f"⚠️ Could not delete {file_path}: {e}")
+    else:
+        print(f"✅ Kept original: {file_path}")
+
+
 def encrypt_folder(folder_path, passphrase):
     if not os.path.isdir(folder_path):
         print(f"❌ Error: Folder '{folder_path}' does not exist.")
@@ -32,6 +48,9 @@ def encrypt_folder(folder_path, passphrase):
     os.remove(archive_name)
     print(f"🗑️ Deleted temporary archive: {archive_name}")
 
+    # Ask if original folder should be deleted
+    ask_delete(folder_path)
+
 
 def decrypt_folder(encrypted_file, passphrase):
     if not os.path.isfile(encrypted_file):
@@ -55,7 +74,7 @@ def decrypt_folder(encrypted_file, passphrase):
         print("❌ Error: GPG decryption failed.")
         sys.exit(1)
 
-    # Create folder name with -decrypted suffix
+    # Extract into filename-decrypted
     base_name = os.path.splitext(decrypted_zip)[0]  # remove .zip
     folder_name = f"{base_name}-decrypted"
 
@@ -65,6 +84,9 @@ def decrypt_folder(encrypted_file, passphrase):
 
     os.remove(decrypted_zip)
     print(f"🗑️ Deleted temporary decrypted zip: {decrypted_zip}")
+
+    # Ask if original encrypted file should be deleted
+    ask_delete(encrypted_file)
 
 
 def choose_folder():
